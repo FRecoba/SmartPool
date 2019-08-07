@@ -65,11 +65,11 @@ const int elapsedTime = 5000; // tiempo transcurrido entre envios al servidor
 void setup()
 {
   Serial.begin(115200);
- //Conversor AD
+  //Conversor AD
   adc.begin();
   adc.set_data_rate(ADS1115_DATA_RATE_860_SPS);
   adc.set_mode(ADS1115_MODE_CONTINUOUS);
-  adc.set_mux(ADS1115_MUX_GND_AIN0);
+  adc.set_mux(ADS1115_MUX_DIFF_AIN0_AIN1);
   adc.set_pga(ADS1115_PGA_MASK);
   // inicializar wifi y pubsus
   connectToWiFi();
@@ -77,10 +77,6 @@ void setup()
 
    
   lastSend = 0; // para controlar cada cuanto tiempo se envian datos
-
-
-  
- 
   delay(10);
 }
 
@@ -122,18 +118,10 @@ void getAndSendData()
 
 
   String PH = String(ph);
-  
+
 
   //Debug messages
-  Serial.print( "Sending temperature and humidity : [" );
-
-
-
-  // Preparar el payload del JSON payload, a modo de ejemplo el mensaje se arma utilizando la clase String. esto se puede hacer con
-  // la biblioteca ArduinoJson (ver on message)
-  // el formato es {key"value, Key: value, .....}
-  // en este caso seria {"temperature:"valor, "humidity:"valor}
-  //
+  Serial.print( "Sending PH : [" );
   String payload = "{";
   payload += "\"PH\":"; payload += PH;
   payload += "}";
@@ -151,17 +139,6 @@ void getAndSendData()
 
 
 
-
-
-
-
-
-
-
-//***************NO MODIFICAR *********************
-/*
- * funcion para reconectarse al servidor de thingsboard y suscribirse a los topicos de RPC y Atributos
- */
 void reconnect() {
   int statusWifi = WL_IDLE_STATUS;
   // Loop until we're reconnected
@@ -206,22 +183,23 @@ void connectToWiFi()
 }
 float medirPH(){
      float val = 0;/* You will be oversampling if the loop takes too short a time */
+            //Promedio 100 lecturas, de manera de filtrar la medida a nivel de software
             for(int i=0;i<100;i++){
               val += adc.read_sample();
             }
             val = (val/100);
-            
-            
-            
+
             Serial.print("Value read is ");
             Serial.println(val);
+            
             Serial.print("Value mv");
             val=(val*7.81)/1000;
             Serial.println(val);
+            
             Serial.print("Value PH");
             val=val/57.14;
             val=-val+7;
-            Serial.println(-val+7);
+            Serial.println(val);
     return val;
 }
 
